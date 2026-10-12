@@ -45,4 +45,19 @@ public sealed class ConversationTests
         Assert.Null(conversation.LastMessage);
         Assert.Null(conversation.LastMessageAt);
     }
+
+    [Fact]
+    public void Mark_as_read_resets_unread_count_idempotently()
+    {
+        var conversation = new Conversation(Guid.NewGuid(), 123, DateTimeOffset.UtcNow);
+        conversation.RegisterInboundMessage("First", DateTimeOffset.UtcNow);
+        conversation.RegisterInboundMessage("Second", DateTimeOffset.UtcNow);
+
+        var firstChange = conversation.MarkAsRead();
+        var secondChange = conversation.MarkAsRead();
+
+        Assert.True(firstChange);
+        Assert.False(secondChange);
+        Assert.Equal(0, conversation.UnreadCount);
+    }
 }

@@ -58,4 +58,30 @@ public sealed class SignalRRealtimeNotifier(
             throw;
         }
     }
+
+    public async Task NotifyMessagesReadAsync(
+        MessagesReadRealtimeDto messagesRead,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await hubContext.Clients.All.SendAsync(
+                "MessagesRead",
+                messagesRead,
+                cancellationToken);
+            logger.LogInformation(
+                "SignalR MessagesRead emitted. ConversationId: {ConversationId}, MessageCount: {MessageCount}",
+                messagesRead.ConversationId,
+                messagesRead.MessageIds.Count);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Error emitting SignalR MessagesRead. ConversationId: {ConversationId}, MessageCount: {MessageCount}",
+                messagesRead.ConversationId,
+                messagesRead.MessageIds.Count);
+            throw;
+        }
+    }
 }

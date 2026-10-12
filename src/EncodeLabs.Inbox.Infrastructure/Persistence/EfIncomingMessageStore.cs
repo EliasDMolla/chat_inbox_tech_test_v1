@@ -87,7 +87,7 @@ internal sealed class EfIncomingMessageStore(AppDbContext dbContext) : IIncoming
             var conversationUpdated = new ConversationUpdatedRealtimeDto(
                 conversation.Id,
                 contact.Id,
-                BuildDisplayName(contact),
+                ContactDisplayName.Build(contact),
                 contact.Username,
                 conversation.LastMessage!,
                 conversation.LastMessageAt!.Value,
@@ -121,19 +121,4 @@ internal sealed class EfIncomingMessageStore(AppDbContext dbContext) : IIncoming
             ConstraintName: TelegramUpdateConstraint,
         };
 
-    private static string BuildDisplayName(Contact contact)
-    {
-        var fullName = string.Join(
-            ' ',
-            new[] { contact.FirstName, contact.LastName }
-                .Where(part => !string.IsNullOrWhiteSpace(part)));
-
-        if (!string.IsNullOrEmpty(fullName))
-        {
-            return fullName;
-        }
-
-        return contact.Username ?? contact.TelegramUserId.ToString(
-            System.Globalization.CultureInfo.InvariantCulture);
-    }
 }

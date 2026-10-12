@@ -9,4 +9,8 @@ public interface IRealtimeNotifier
     Task NotifyConversationUpdatedAsync(
         ConversationUpdatedRealtimeDto conversation,
         CancellationToken cancellationToken);
+
+    Task NotifyMessagesReadAsync(
+        MessagesReadRealtimeDto messagesRead,
+        CancellationToken cancellationToken);
 }

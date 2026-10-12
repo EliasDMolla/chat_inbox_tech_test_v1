@@ -56,4 +56,15 @@ public sealed class Message
         DateTimeOffset sentAt,
         DateTimeOffset createdAt) =>
         new(conversationId, telegramMessageId, telegramUpdateId, text, sentAt, createdAt);
+
+    public bool MarkAsRead()
+    {
+        if (Direction != MessageDirection.Inbound || IsRead)
+        {
+            return false;
+        }
+
+        IsRead = true;
+        return true;
+    }
 }

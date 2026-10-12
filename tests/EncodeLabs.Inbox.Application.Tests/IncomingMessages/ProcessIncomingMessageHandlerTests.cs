@@ -207,5 +207,10 @@ public sealed class ProcessIncomingMessageHandlerTests
             Conversations.Add(conversation);
             return Task.CompletedTask;
         }
+
+        public Task NotifyMessagesReadAsync(
+            MessagesReadRealtimeDto messagesRead,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

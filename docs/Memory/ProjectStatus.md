@@ -47,3 +47,16 @@
 - **Prueba manual:** un cliente SignalR real recibió `MessageReceived` seguido de `ConversationUpdated`; PostgreSQL quedó con 2 mensajes, `UnreadCount = 2` y el último mensaje correcto. Al republicar ambos updates no hubo eventos ni cambios duplicados. Una conexión nueva no recibió eventos históricos, como se esperaba.
 - **Limitaciones pendientes:** SignalR es best effort; un fallo posterior al commit puede perder una notificación o dejar entrega parcial entre los dos eventos. No hay Outbox, autenticación, grupos ni cliente Angular. Telegram/ngrok real no se probó por falta de tokens locales.
 - **Próxima feature recomendada:** API de consultas de conversaciones e historial y caso de uso mark-as-read, para que el cliente pueda hidratarse y recuperarse de reconexiones desde PostgreSQL.
+
+## FEAT-005 — API de conversaciones, historial y lectura
+
+- **Fecha:** 2026-10-12.
+- **Estado:** completada.
+- **Endpoints:** `GET /api/conversations`, `GET /api/conversations/{conversationId}/messages` y `POST /api/conversations/{conversationId}/read`, con `404` coherente y `204` idempotente para lectura.
+- **DTOs y queries:** `ConversationSummaryDto` y `ConversationMessageDto`; proyecciones EF Core `AsNoTracking`, orden estable y una consulta sin N+1 para el sidebar. El historial usa una verificación de existencia y una consulta proyectada, sin exponer IDs internos de Telegram.
+- **Lectura y concurrencia:** mensajes inbound unread y `Conversation.UnreadCount` se actualizan en una transacción. Se reutiliza el advisory lock `chat:{TelegramChatId}` de FEAT-003; según quién obtenga el lock, el mensaje concurrente queda correctamente leído o unread, sin perder el contador.
+- **Realtime:** después del commit se emite `MessagesRead` y luego `ConversationUpdated`. Una segunda lectura sin cambios no renotifica. Los fallos SignalR se registran pero no revierten PostgreSQL ni cambian el éxito HTTP.
+- **Validaciones:** restore/build sin warnings ni errores, 31/31 tests, formato sin cambios, Compose válido y build Docker de API/frontend correcto.
+- **Prueba manual:** tres conversaciones creadas por RabbitMQ; sidebar e historiales verificados por HTTP; 404, lectura e idempotencia confirmados; un cliente SignalR recibió ambos eventos en orden. PostgreSQL confirmó inbound leídos, outbound sintético sin modificar y contador en cero. En una carrera controlada, la lectura ganó el lock y el mensaje posterior quedó unread, con `UnreadCount = 1` igual al único mensaje unread.
+- **Limitaciones pendientes:** sin paginación, autenticación, búsqueda, UI Angular ni envío saliente. Realtime continúa siendo best effort y no usa Outbox. Telegram/ngrok real no se probó por falta de tokens locales.
+- **Próxima feature recomendada:** envío de mensajes salientes mediante Telegram Bot API, con persistencia y notificaciones posteriores al éxito.

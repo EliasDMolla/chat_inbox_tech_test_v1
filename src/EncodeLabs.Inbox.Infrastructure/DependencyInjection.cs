@@ -1,5 +1,6 @@
 using EncodeLabs.Inbox.Application.Telegram;
 using EncodeLabs.Inbox.Application.IncomingMessages;
+using EncodeLabs.Inbox.Application.Conversations;
 using EncodeLabs.Inbox.Infrastructure.Messaging;
 using EncodeLabs.Inbox.Infrastructure.Persistence;
 using EncodeLabs.Inbox.Infrastructure.Telegram;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddSingleton<RabbitMqConnectionProvider>();
         services.AddSingleton<IIncomingMessagePublisher, RabbitMqIncomingMessagePublisher>();
         services.AddScoped<IIncomingMessageStore, EfIncomingMessageStore>();
+        services.AddScoped<IConversationStore, EfConversationStore>();
         services.AddHostedService<DatabaseMigrationService>();
         services.AddHostedService<RabbitMqTopologyInitializer>();
         services.AddHostedService<RabbitMqIncomingMessageConsumer>();

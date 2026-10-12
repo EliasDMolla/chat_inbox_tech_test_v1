@@ -46,4 +46,15 @@ public sealed class Conversation
             LastMessageAt = sentAt;
         }
     }
+
+    public bool MarkAsRead()
+    {
+        if (UnreadCount == 0)
+        {
+            return false;
+        }
+
+        UnreadCount = 0;
+        return true;
+    }
 }

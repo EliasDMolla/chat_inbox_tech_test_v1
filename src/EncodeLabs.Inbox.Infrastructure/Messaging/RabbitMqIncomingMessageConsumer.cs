@@ -1,5 +1,6 @@
 using System.Text.Json;
 using EncodeLabs.Inbox.Application.IncomingMessages;
+using EncodeLabs.Inbox.Application.Realtime;
 using EncodeLabs.Inbox.Application.Telegram;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

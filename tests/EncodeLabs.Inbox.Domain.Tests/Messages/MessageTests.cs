@@ -35,4 +35,23 @@ public sealed class MessageTests
             DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow));
     }
+
+    [Fact]
+    public void Inbound_message_is_marked_as_read_idempotently()
+    {
+        var message = Message.CreateInbound(
+            Guid.NewGuid(),
+            20,
+            10,
+            "Hello",
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow);
+
+        var firstChange = message.MarkAsRead();
+        var secondChange = message.MarkAsRead();
+
+        Assert.True(firstChange);
+        Assert.False(secondChange);
+        Assert.True(message.IsRead);
+    }
 }

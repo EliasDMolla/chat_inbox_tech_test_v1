@@ -17,10 +17,3 @@ public enum IncomingMessageProcessingStatus
     Processed,
     Duplicate,
 }
-
-public enum RealtimeNotificationStatus
-{
-    NotApplicable,
-    Sent,
-    Failed,
-}
