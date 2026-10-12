@@ -1,4 +1,5 @@
 using EncodeLabs.Inbox.Application.IncomingMessages;
+using EncodeLabs.Inbox.Application.Realtime;
 using EncodeLabs.Inbox.Application.Telegram;
 using EncodeLabs.Inbox.Domain.Contacts;
 using EncodeLabs.Inbox.Domain.Conversations;
@@ -75,11 +76,30 @@ internal sealed class EfIncomingMessageStore(AppDbContext dbContext) : IIncoming
             await dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
+            var messageReceived = new MessageReceivedRealtimeDto(
+                conversation.Id,
+                new RealtimeMessageDto(
+                    message.Id,
+                    message.Direction.ToString(),
+                    message.Text,
+                    message.SentAt,
+                    message.IsRead));
+            var conversationUpdated = new ConversationUpdatedRealtimeDto(
+                conversation.Id,
+                contact.Id,
+                BuildDisplayName(contact),
+                contact.Username,
+                conversation.LastMessage!,
+                conversation.LastMessageAt!.Value,
+                conversation.UnreadCount);
+
             return new(
                 IncomingMessageProcessingStatus.Processed,
                 contact.Id,
                 conversation.Id,
-                message.Id);
+                message.Id,
+                messageReceived,
+                conversationUpdated);
         }
         catch (DbUpdateException exception) when (IsDuplicateUpdate(exception))
         {
@@ -100,4 +120,20 @@ internal sealed class EfIncomingMessageStore(AppDbContext dbContext) : IIncoming
             SqlState: PostgresErrorCodes.UniqueViolation,
             ConstraintName: TelegramUpdateConstraint,
         };
+
+    private static string BuildDisplayName(Contact contact)
+    {
+        var fullName = string.Join(
+            ' ',
+            new[] { contact.FirstName, contact.LastName }
+                .Where(part => !string.IsNullOrWhiteSpace(part)));
+
+        if (!string.IsNullOrEmpty(fullName))
+        {
+            return fullName;
+        }
+
+        return contact.Username ?? contact.TelegramUserId.ToString(
+            System.Globalization.CultureInfo.InvariantCulture);
+    }
 }

@@ -35,3 +35,15 @@
 - **Prueba manual:** stack Docker saludable con credenciales efímeras; tres publicaciones (dos updates distintos y una repetición) produjeron 1 contacto, 1 conversación, 2 mensajes, `UnreadCount = 2` y último mensaje correcto; cola principal quedó vacía tras ACK; el duplicado fue ignorado; un payload inválido terminó en DLQ; restricción única verificada directamente en PostgreSQL.
 - **Limitaciones pendientes:** no se probó Telegram/ngrok real por falta de tokens locales. SignalR, consultas de conversaciones/historial, mark-as-read y mensajes salientes continúan fuera de alcance. La prueba local requiere completar las contraseñas vacías del `.env`.
 - **Próxima feature recomendada:** FEAT-004, incorporar notificaciones SignalR posteriores al commit sin cambiar PostgreSQL como fuente de verdad.
+
+## FEAT-004 — Notificaciones en tiempo real con SignalR
+
+- **Fecha:** 2026-10-12.
+- **Estado:** completada.
+- **Implementado:** Hub `/hubs/conversations`, CORS configurable para Angular, abstracción `IRealtimeNotifier` en Application e implementación SignalR en Api. El caso de uso emite a `Clients.All` después del commit y antes del ACK de RabbitMQ.
+- **Eventos y DTOs:** `MessageReceived` usa `MessageReceivedRealtimeDto`/`RealtimeMessageDto`; luego `ConversationUpdated` usa `ConversationUpdatedRealtimeDto`. Los payloads contienen solamente el mensaje y el resumen necesarios para actualizar una futura UI.
+- **Duplicados y fallos:** un `TelegramUpdateId` duplicado no modifica PostgreSQL ni notifica y se ACKea. Si SignalR falla luego del commit, se registra el error y se ACKea para no reprocesar dominio persistido; no se revierte la transacción ni se implementa Outbox.
+- **Validaciones:** restore/build .NET sin warnings/errores, 20/20 tests, formato sin cambios y `docker compose config` válido. Build Docker de API/frontend y stack aislado saludables.
+- **Prueba manual:** un cliente SignalR real recibió `MessageReceived` seguido de `ConversationUpdated`; PostgreSQL quedó con 2 mensajes, `UnreadCount = 2` y el último mensaje correcto. Al republicar ambos updates no hubo eventos ni cambios duplicados. Una conexión nueva no recibió eventos históricos, como se esperaba.
+- **Limitaciones pendientes:** SignalR es best effort; un fallo posterior al commit puede perder una notificación o dejar entrega parcial entre los dos eventos. No hay Outbox, autenticación, grupos ni cliente Angular. Telegram/ngrok real no se probó por falta de tokens locales.
+- **Próxima feature recomendada:** API de consultas de conversaciones e historial y caso de uso mark-as-read, para que el cliente pueda hidratarse y recuperarse de reconexiones desde PostgreSQL.

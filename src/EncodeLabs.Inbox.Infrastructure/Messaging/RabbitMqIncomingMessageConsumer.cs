@@ -64,15 +64,25 @@ internal sealed class RabbitMqIncomingMessageConsumer(
             if (result.Status == IncomingMessageProcessingStatus.Duplicate)
             {
                 logger.LogInformation(
-                    "Duplicate Telegram update ignored idempotently. TelegramUpdateId: {TelegramUpdateId}, TelegramMessageId: {TelegramMessageId}, TelegramChatId: {TelegramChatId}",
+                    "Duplicate Telegram update ignored idempotently; realtime notification omitted. TelegramUpdateId: {TelegramUpdateId}, TelegramMessageId: {TelegramMessageId}, TelegramChatId: {TelegramChatId}",
                     incoming.UpdateId,
                     incoming.MessageId,
                     incoming.ChatId);
                 return;
             }
 
+            if (result.RealtimeNotificationStatus == RealtimeNotificationStatus.Failed)
+            {
+                logger.LogError(
+                    "Incoming Telegram message committed, but its SignalR notification failed; delivery was acknowledged to avoid reprocessing persisted domain data. TelegramUpdateId: {TelegramUpdateId}, ConversationId: {ConversationId}, MessageId: {MessageId}",
+                    incoming.UpdateId,
+                    result.ConversationId,
+                    result.MessageId);
+                return;
+            }
+
             logger.LogInformation(
-                "Incoming Telegram message persisted and acknowledged. TelegramUpdateId: {TelegramUpdateId}, TelegramMessageId: {TelegramMessageId}, TelegramChatId: {TelegramChatId}, ConversationId: {ConversationId}, ContactId: {ContactId}",
+                "Incoming Telegram message persisted, notified and acknowledged. TelegramUpdateId: {TelegramUpdateId}, TelegramMessageId: {TelegramMessageId}, TelegramChatId: {TelegramChatId}, ConversationId: {ConversationId}, ContactId: {ContactId}",
                 incoming.UpdateId,
                 incoming.MessageId,
                 incoming.ChatId,

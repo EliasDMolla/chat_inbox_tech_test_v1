@@ -4,9 +4,9 @@ Prueba técnica de una bandeja conversacional para Telegram.
 
 ## Estado actual
 
-FEAT-003 implementa el procesamiento completo de mensajes de texto entrantes: el webhook publica en RabbitMQ, un consumer crea o actualiza `Contact`, `Conversation` y `Message` en PostgreSQL dentro de una transacción y recién entonces confirma el mensaje al broker.
+FEAT-004 implementa el procesamiento completo de mensajes de texto entrantes: el webhook publica en RabbitMQ, un consumer crea o actualiza `Contact`, `Conversation` y `Message` en PostgreSQL dentro de una transacción y, luego del commit, notifica a los clientes conectados mediante SignalR antes de confirmar el mensaje al broker.
 
-Los updates repetidos son idempotentes mediante `TelegramUpdateId`; no duplican mensajes ni incrementan nuevamente los no leídos. SignalR funcional y la bandeja conversacional todavía no están implementados.
+Los updates repetidos son idempotentes mediante `TelegramUpdateId`; no duplican mensajes, no incrementan nuevamente los no leídos y no emiten eventos SignalR. La bandeja conversacional todavía no está implementada.
 
 ## Requisitos
 
@@ -37,6 +37,7 @@ Al iniciar, la API aplica las migraciones de PostgreSQL, declara la topología R
 - Frontend: http://localhost:4200
 - API: http://localhost:8080
 - Health check: http://localhost:8080/health
+- Hub SignalR: http://localhost:8080/hubs/conversations
 - RabbitMQ Management: http://localhost:15672
 - ngrok UI/API: http://localhost:4040
 
@@ -72,6 +73,19 @@ docker compose exec postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 ```
 
 Si RabbitMQ no puede aceptar un mensaje de texto soportado, el endpoint devuelve error; no informa un éxito falso a Telegram.
+
+## Tiempo real con SignalR
+
+El Hub `/hubs/conversations` notifica a `Clients.All` estos eventos, siempre en este orden para cada mensaje nuevo:
+
+1. `MessageReceived`, con `conversationId` y un mensaje compuesto por `id`, `direction`, `text`, `sentAt` e `isRead`.
+2. `ConversationUpdated`, con `conversationId`, `contactId`, `displayName`, `username`, `lastMessageText`, `lastMessageAt` y `unreadCount`.
+
+Para probarlo, iniciar el stack, conectar un cliente SignalR al Hub y registrar ambos handlers. Luego enviar un texto al bot o publicar un `IncomingTelegramMessage` válido en `telegram.incoming.messages`. El cliente debe recibir los dos eventos después del commit; al republicar exactamente el mismo `UpdateId`, no debe recibir ninguno.
+
+PostgreSQL es la fuente de verdad. SignalR no almacena ni reproduce eventos: luego de una desconexión, el cliente debe recuperar el estado vigente mediante las APIs de consultas que se implementarán en una feature posterior. Si una notificación falla después del commit, el error se registra y el delivery se confirma para no reprocesar datos ya persistidos. No se implementa Outbox en el alcance actual, por lo que esa notificación puede perderse y un fallo entre ambos envíos puede producir una entrega parcial.
+
+El origen permitido por CORS se configura en `Cors:AllowedOrigins` y por defecto incluye `http://localhost:4200`. En esta etapa no hay autenticación, grupos, scopes multioperador ni cliente SignalR integrado en Angular.
 
 ## Estructura
 
