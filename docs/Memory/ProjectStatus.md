@@ -60,3 +60,21 @@
 - **Prueba manual:** tres conversaciones creadas por RabbitMQ; sidebar e historiales verificados por HTTP; 404, lectura e idempotencia confirmados; un cliente SignalR recibió ambos eventos en orden. PostgreSQL confirmó inbound leídos, outbound sintético sin modificar y contador en cero. En una carrera controlada, la lectura ganó el lock y el mensaje posterior quedó unread, con `UnreadCount = 1` igual al único mensaje unread.
 - **Limitaciones pendientes:** sin paginación, autenticación, búsqueda, UI Angular ni envío saliente. Realtime continúa siendo best effort y no usa Outbox. Telegram/ngrok real no se probó por falta de tokens locales.
 - **Próxima feature recomendada:** envío de mensajes salientes mediante Telegram Bot API, con persistencia y notificaciones posteriores al éxito.
+
+## FEAT-006 — Envío de mensajes salientes a Telegram
+
+- **Fecha:** 2026-10-12.
+- **Estado:** completada.
+- **Endpoint:** `POST /api/conversations/{conversationId}/messages`, con texto requerido, no whitespace y máximo de 4096 caracteres; devuelve el DTO outbound creado, `400` para texto inválido, `404` si no existe la conversación, `502` ante rechazo de Telegram y `503` ante indisponibilidad o falta de configuración.
+- **Abstracción Telegram:** `ITelegramMessageSender` en Application, implementada por `TelegramMessageSender` en Infrastructure mediante un `HttpClient` reutilizable y `TELEGRAM_BOT_TOKEN`; Application no depende de tipos ni librerías de Telegram.
+- **Flujo:** conversación y chat → advisory lock → Telegram Bot API → confirmación de Telegram → persistencia de `Message` outbound y actualización de conversación → commit PostgreSQL → `MessageSent` → `ConversationUpdated` → respuesta HTTP. RabbitMQ no participa del envío saliente.
+- **Persistencia:** el mensaje guarda `TelegramMessageId`, `Direction = Outbound`, `IsRead = true`, texto normalizado y la fecha UTC informada por Telegram. `TelegramUpdateId` pasó a nullable solo para soportar outbound; su índice único continúa protegiendo la idempotencia inbound mediante PostgreSQL.
+- **Concurrencia:** se reutiliza `pg_advisory_xact_lock` con la clave `chat:{TelegramChatId}`. El lock se mantiene durante el envío y el commit, serializando incoming, mark-as-read y outbound solo dentro del mismo chat.
+- **Unread y último mensaje:** outbound no incrementa ni resetea `UnreadCount`; actualiza `LastMessage` y `LastMessageAt` con el mensaje confirmado.
+- **Fallos:** si Telegram rechaza, expira o no está configurado, no se persiste ni se emite realtime. Los detalles sensibles no se exponen ni se registra el token. Si SignalR falla después del commit, la operación HTTP sigue siendo exitosa y PostgreSQL conserva el mensaje.
+- **Trade-off externo:** el orden requerido Telegram → PostgreSQL permite que Telegram acepte un mensaje y luego falle el commit. No se agregan transacción distribuida, estados de delivery, retries persistentes ni Outbox; la reconciliación queda fuera de alcance.
+- **Realtime:** `MessageSent` y luego `ConversationUpdated`, ambos posteriores al commit y con DTOs de Application.
+- **Tests y validaciones:** 42/42 tests pasaron, incluidos dominio outbound/unread y Application para not found, validación, orden lock/Telegram/commit/SignalR, persistencia, contador, actualización del resumen, fallos de Telegram y persistencia, y SignalR best-effort. `dotnet restore`, build sin warnings, formato y `docker compose config` resultaron correctos; las imágenes API/frontend se construyeron.
+- **Prueba manual:** stack Docker aislado saludable; migración aplicada, API y frontend respondieron `200`, texto whitespace devolvió `400`, conversación inexistente `404` y conversación existente sin token devolvió `503` sin crear mensajes. No se probó un envío Telegram/ngrok real porque no existen credenciales locales; no se agregó un sender fake en runtime.
+- **Limitaciones:** sin idempotency key HTTP, delivery receipts, retries persistentes ni reconciliación del caso Telegram exitoso + DB fallida. SignalR sigue siendo best effort.
+- **Próxima feature recomendada:** FEAT-007, integración de la bandeja Angular con las APIs y eventos SignalR existentes, sin anticiparla en esta implementación.

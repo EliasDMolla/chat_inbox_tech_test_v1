@@ -54,4 +54,23 @@ public sealed class MessageTests
         Assert.False(secondChange);
         Assert.True(message.IsRead);
     }
+
+    [Fact]
+    public void Outbound_message_is_created_read_without_an_update_id()
+    {
+        var sentAt = new DateTimeOffset(2026, 10, 12, 19, 0, 0, TimeSpan.Zero);
+
+        var message = Message.CreateOutbound(
+            Guid.NewGuid(),
+            30,
+            " Reply ",
+            sentAt,
+            sentAt.AddSeconds(1));
+
+        Assert.Equal(MessageDirection.Outbound, message.Direction);
+        Assert.True(message.IsRead);
+        Assert.Equal("Reply", message.Text);
+        Assert.Null(message.TelegramUpdateId);
+        Assert.Equal(30, message.TelegramMessageId);
+    }
 }

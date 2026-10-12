@@ -119,7 +119,7 @@ namespace EncodeLabs.Inbox.Infrastructure.Persistence.Migrations
                     b.Property<long>("TelegramMessageId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("TelegramUpdateId")
+                    b.Property<long?>("TelegramUpdateId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Text")

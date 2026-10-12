@@ -57,4 +57,15 @@ public sealed class Conversation
         UnreadCount = 0;
         return true;
     }
+
+    public void RegisterOutboundMessage(string text, DateTimeOffset sentAt)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new ArgumentException("Message text cannot be empty.", nameof(text));
+        }
+
+        LastMessage = text.Trim();
+        LastMessageAt = sentAt;
+    }
 }

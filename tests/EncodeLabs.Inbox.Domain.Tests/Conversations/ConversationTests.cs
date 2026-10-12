@@ -60,4 +60,18 @@ public sealed class ConversationTests
         Assert.False(secondChange);
         Assert.Equal(0, conversation.UnreadCount);
     }
+
+    [Fact]
+    public void Outbound_message_updates_latest_message_without_changing_unread_count()
+    {
+        var sentAt = new DateTimeOffset(2026, 10, 12, 19, 0, 0, TimeSpan.Zero);
+        var conversation = new Conversation(Guid.NewGuid(), 123, sentAt.AddMinutes(-2));
+        conversation.RegisterInboundMessage("Inbound", sentAt.AddMinutes(-1));
+
+        conversation.RegisterOutboundMessage(" Reply ", sentAt);
+
+        Assert.Equal(1, conversation.UnreadCount);
+        Assert.Equal("Reply", conversation.LastMessage);
+        Assert.Equal(sentAt, conversation.LastMessageAt);
+    }
 }

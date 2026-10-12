@@ -4,7 +4,7 @@ Prueba técnica de una bandeja conversacional para Telegram.
 
 ## Estado actual
 
-FEAT-005 agrega la API de conversaciones e historial y el marcado transaccional de mensajes como leídos. El flujo entrante continúa publicando en RabbitMQ, persistiendo en PostgreSQL y notificando mediante SignalR después del commit.
+FEAT-006 agrega el envío de mensajes de texto desde la API hacia Telegram. Telegram debe confirmar el envío antes de persistir el mensaje outbound; después del commit se notifica a los clientes mediante SignalR. RabbitMQ continúa reservado exclusivamente para mensajes entrantes.
 
 Los updates repetidos son idempotentes mediante `TelegramUpdateId`; no duplican mensajes, no incrementan nuevamente los no leídos y no emiten eventos SignalR. PostgreSQL es la fuente de verdad y la bandeja Angular todavía no está implementada.
 
@@ -47,7 +47,7 @@ El esquema inicial contiene:
 
 - `contacts`, único por `TelegramUserId`.
 - `conversations`, única por `TelegramChatId` y asociada a un contacto; mantiene `UnreadCount`, `LastMessage` y `LastMessageAt`.
-- `messages`, con índices únicos para `TelegramUpdateId` y `(ConversationId, TelegramMessageId)`.
+- `messages`, con índices únicos para `TelegramUpdateId` y `(ConversationId, TelegramMessageId)`. `TelegramUpdateId` es obligatorio conceptualmente para inbound y nullable para outbound, porque Telegram no devuelve un update ID al usar `sendMessage`.
 
 La migración se aplica automáticamente al iniciar la API. También puede inspeccionarse o aplicarse manualmente con una connection string configurada:
 
@@ -90,12 +90,30 @@ curl -X POST http://localhost:8080/api/conversations/CONVERSATION_ID/read
 
 El marcado como leído es idempotente. Mensajes y contador se actualizan dentro de una transacción protegida por el mismo advisory lock por chat que utiliza el procesamiento entrante. Esto evita perder un unread si llega un mensaje mientras se abre la conversación.
 
+## Envío de mensajes a Telegram
+
+`POST /api/conversations/{conversationId}/messages` acepta un texto no vacío de hasta 4096 caracteres:
+
+```bash
+curl -X POST http://localhost:8080/api/conversations/CONVERSATION_ID/messages \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Respuesta desde EncodeLabs Inbox"}'
+```
+
+El flujo exacto es: obtener la conversación, adquirir el advisory lock `chat:{TelegramChatId}`, llamar a Telegram Bot API, recibir la confirmación, persistir un `Message` con dirección `Outbound`, actualizar `LastMessage`/`LastMessageAt`, hacer commit y emitir `MessageSent` seguido de `ConversationUpdated`. El mensaje outbound queda leído y no incrementa `UnreadCount`.
+
+Un texto inválido devuelve `400`, una conversación inexistente `404`, un rechazo de Telegram `502` y una indisponibilidad o falta de configuración `503`. Los errores enviados al cliente no incluyen detalles sensibles y el bot token nunca se registra en logs. Si Telegram falla, no se crea el mensaje ni se emite SignalR.
+
+Existe un trade-off deliberado entre sistemas: Telegram puede aceptar el mensaje y PostgreSQL fallar después. En ese caso el usuario recibe el texto, pero la bandeja no lo persiste. Resolverlo requeriría estados de entrega, retries y reconciliación; no se incorporan transacciones distribuidas ni Outbox para este alcance.
+
 ## Tiempo real con SignalR
 
 El Hub `/hubs/conversations` notifica a `Clients.All` estos eventos, siempre en este orden para cada mensaje nuevo:
 
 1. `MessageReceived`, con `conversationId` y un mensaje compuesto por `id`, `direction`, `text`, `sentAt` e `isRead`.
 2. `ConversationUpdated`, con `conversationId`, `contactId`, `displayName`, `username`, `lastMessageText`, `lastMessageAt` y `unreadCount`.
+
+Para un mensaje saliente confirmado y persistido emite `MessageSent` con el mismo contrato compacto de mensaje y luego `ConversationUpdated`; el contador unread conserva su valor anterior.
 
 Un marcado como leído que produce cambios emite, después del commit:
 

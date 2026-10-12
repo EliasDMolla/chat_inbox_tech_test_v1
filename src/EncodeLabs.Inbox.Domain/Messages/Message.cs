@@ -9,8 +9,10 @@ public sealed class Message
     private Message(
         Guid conversationId,
         long telegramMessageId,
-        long telegramUpdateId,
+        long? telegramUpdateId,
+        MessageDirection direction,
         string text,
+        bool isRead,
         DateTimeOffset sentAt,
         DateTimeOffset createdAt)
     {
@@ -23,9 +25,9 @@ public sealed class Message
         ConversationId = conversationId;
         TelegramMessageId = telegramMessageId;
         TelegramUpdateId = telegramUpdateId;
-        Direction = MessageDirection.Inbound;
+        Direction = direction;
         Text = text.Trim();
-        IsRead = false;
+        IsRead = isRead;
         SentAt = sentAt;
         CreatedAt = createdAt;
     }
@@ -36,7 +38,7 @@ public sealed class Message
 
     public long TelegramMessageId { get; private set; }
 
-    public long TelegramUpdateId { get; private set; }
+    public long? TelegramUpdateId { get; private set; }
 
     public MessageDirection Direction { get; private set; }
 
@@ -55,7 +57,31 @@ public sealed class Message
         string text,
         DateTimeOffset sentAt,
         DateTimeOffset createdAt) =>
-        new(conversationId, telegramMessageId, telegramUpdateId, text, sentAt, createdAt);
+        new(
+            conversationId,
+            telegramMessageId,
+            telegramUpdateId,
+            MessageDirection.Inbound,
+            text,
+            false,
+            sentAt,
+            createdAt);
+
+    public static Message CreateOutbound(
+        Guid conversationId,
+        long telegramMessageId,
+        string text,
+        DateTimeOffset sentAt,
+        DateTimeOffset createdAt) =>
+        new(
+            conversationId,
+            telegramMessageId,
+            null,
+            MessageDirection.Outbound,
+            text,
+            true,
+            sentAt,
+            createdAt);
 
     public bool MarkAsRead()
     {

@@ -256,6 +256,11 @@ public sealed class ConversationHandlersTests
             CancellationToken cancellationToken) =>
             Task.CompletedTask;
 
+        public Task NotifyMessageSentAsync(
+            MessageSentRealtimeDto message,
+            CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
         public Task NotifyConversationUpdatedAsync(
             ConversationUpdatedRealtimeDto conversation,
             CancellationToken cancellationToken)

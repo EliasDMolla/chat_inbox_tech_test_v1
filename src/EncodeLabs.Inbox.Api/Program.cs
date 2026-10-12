@@ -2,6 +2,7 @@ using EncodeLabs.Inbox.Application.Telegram;
 using EncodeLabs.Inbox.Application.IncomingMessages;
 using EncodeLabs.Inbox.Application.Realtime;
 using EncodeLabs.Inbox.Application.Conversations;
+using EncodeLabs.Inbox.Application.OutgoingMessages;
 using EncodeLabs.Inbox.Api.Realtime;
 using EncodeLabs.Inbox.Infrastructure;
 using Serilog;
@@ -30,6 +31,7 @@ builder.Services.AddScoped<ProcessIncomingMessageHandler>();
 builder.Services.AddScoped<GetConversationsHandler>();
 builder.Services.AddScoped<GetConversationMessagesHandler>();
 builder.Services.AddScoped<MarkConversationAsReadHandler>();
+builder.Services.AddScoped<SendOutgoingMessageHandler>();
 builder.Services.AddSingleton<IRealtimeNotifier, SignalRRealtimeNotifier>();
 builder.Services.AddInfrastructure(builder.Configuration);
 

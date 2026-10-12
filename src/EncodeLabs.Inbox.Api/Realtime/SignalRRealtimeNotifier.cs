@@ -7,6 +7,32 @@ public sealed class SignalRRealtimeNotifier(
     IHubContext<ConversationsHub> hubContext,
     ILogger<SignalRRealtimeNotifier> logger) : IRealtimeNotifier
 {
+    public async Task NotifyMessageSentAsync(
+        MessageSentRealtimeDto message,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await hubContext.Clients.All.SendAsync(
+                "MessageSent",
+                message,
+                cancellationToken);
+            logger.LogInformation(
+                "SignalR MessageSent emitted. ConversationId: {ConversationId}, MessageId: {MessageId}",
+                message.ConversationId,
+                message.Message.Id);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Error emitting SignalR MessageSent. ConversationId: {ConversationId}, MessageId: {MessageId}",
+                message.ConversationId,
+                message.Message.Id);
+            throw;
+        }
+    }
+
     public async Task NotifyMessageReceivedAsync(
         MessageReceivedRealtimeDto message,
         CancellationToken cancellationToken)
