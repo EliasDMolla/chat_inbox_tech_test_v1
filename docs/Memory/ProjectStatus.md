@@ -22,3 +22,16 @@
 - **Prueba manual:** stack levantado con credenciales efímeras; PostgreSQL y RabbitMQ saludables, API y frontend disponibles; la cola principal quedó con 1 mensaje y la DLQ con 0 luego de probar texto + sticker simulado.
 - **Limitaciones pendientes:** no se validó Telegram → ngrok real porque el `.env` local no contiene tokens/contraseñas; ngrok salió por falta de credenciales. Consumer, persistencia, idempotencia en base de datos y SignalR siguen fuera de alcance de esta feature.
 - **Próxima feature recomendada:** FEAT-003, consumer RabbitMQ para procesar y persistir mensajes entrantes de forma idempotente antes de notificar por SignalR.
+
+## FEAT-003 — Procesamiento y persistencia de mensajes entrantes
+
+- **Fecha:** 2026-10-12.
+- **Estado:** completada.
+- **Implementado:** entidades `Contact`, `Conversation` y `Message`; caso de uso de procesamiento; persistencia transaccional EF Core/PostgreSQL; migración inicial; consumer de `telegram.incoming.messages` con ACK posterior al commit y aplicación automática de migraciones al iniciar.
+- **Decisiones técnicas:** el dominio mantiene unread y último mensaje; Infrastructure serializa escrituras por usuario/chat mediante advisory locks transaccionales de PostgreSQL; `TelegramUpdateId` único es la última barrera de idempotencia; un duplicado se considera éxito; payloads inválidos van directo a DLQ y fallos inesperados tienen un único requeue antes de DLQ.
+- **Modelo e índices:** contactos únicos por `TelegramUserId`; conversaciones únicas por `TelegramChatId` y `ContactId`; mensajes únicos por `TelegramUpdateId` y por `(ConversationId, TelegramMessageId)`, con índice adicional por conversación/fecha.
+- **Módulos principales:** entidades en Domain, `Application/IncomingMessages`, persistencia/migraciones y consumer en Infrastructure, registro de dependencias, tests, `README.md`.
+- **Validaciones:** restore y build .NET sin warnings/errores; 16/16 tests; formato; migración descubierta por EF; Compose válido; imágenes API/frontend construidas; revisión de paquetes sin vulnerabilidades conocidas.
+- **Prueba manual:** stack Docker saludable con credenciales efímeras; tres publicaciones (dos updates distintos y una repetición) produjeron 1 contacto, 1 conversación, 2 mensajes, `UnreadCount = 2` y último mensaje correcto; cola principal quedó vacía tras ACK; el duplicado fue ignorado; un payload inválido terminó en DLQ; restricción única verificada directamente en PostgreSQL.
+- **Limitaciones pendientes:** no se probó Telegram/ngrok real por falta de tokens locales. SignalR, consultas de conversaciones/historial, mark-as-read y mensajes salientes continúan fuera de alcance. La prueba local requiere completar las contraseñas vacías del `.env`.
+- **Próxima feature recomendada:** FEAT-004, incorporar notificaciones SignalR posteriores al commit sin cambiar PostgreSQL como fuente de verdad.

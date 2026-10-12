@@ -1,0 +1,48 @@
+using EncodeLabs.Inbox.Domain.Conversations;
+
+namespace EncodeLabs.Inbox.Domain.Tests.Conversations;
+
+public sealed class ConversationTests
+{
+    [Fact]
+    public void Inbound_messages_increment_unread_count_and_keep_latest_message()
+    {
+        var createdAt = new DateTimeOffset(2026, 10, 12, 12, 0, 0, TimeSpan.Zero);
+        var conversation = new Conversation(Guid.NewGuid(), 123, createdAt);
+
+        conversation.RegisterInboundMessage("First", createdAt.AddMinutes(1));
+        conversation.RegisterInboundMessage("Second", createdAt.AddMinutes(2));
+
+        Assert.Equal(2, conversation.UnreadCount);
+        Assert.Equal("Second", conversation.LastMessage);
+        Assert.Equal(createdAt.AddMinutes(2), conversation.LastMessageAt);
+    }
+
+    [Fact]
+    public void Older_message_increments_unread_without_replacing_latest_message()
+    {
+        var createdAt = new DateTimeOffset(2026, 10, 12, 12, 0, 0, TimeSpan.Zero);
+        var conversation = new Conversation(Guid.NewGuid(), 123, createdAt);
+        conversation.RegisterInboundMessage("Latest", createdAt.AddMinutes(2));
+
+        conversation.RegisterInboundMessage("Delayed", createdAt.AddMinutes(1));
+
+        Assert.Equal(2, conversation.UnreadCount);
+        Assert.Equal("Latest", conversation.LastMessage);
+        Assert.Equal(createdAt.AddMinutes(2), conversation.LastMessageAt);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Empty_message_does_not_change_conversation(string text)
+    {
+        var conversation = new Conversation(Guid.NewGuid(), 123, DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentException>(() =>
+            conversation.RegisterInboundMessage(text, DateTimeOffset.UtcNow));
+        Assert.Equal(0, conversation.UnreadCount);
+        Assert.Null(conversation.LastMessage);
+        Assert.Null(conversation.LastMessageAt);
+    }
+}

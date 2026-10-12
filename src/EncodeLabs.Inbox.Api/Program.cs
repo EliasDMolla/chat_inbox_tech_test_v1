@@ -1,4 +1,5 @@
 using EncodeLabs.Inbox.Application.Telegram;
+using EncodeLabs.Inbox.Application.IncomingMessages;
 using EncodeLabs.Inbox.Infrastructure;
 using Serilog;
 
@@ -13,6 +14,7 @@ builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<TelegramWebhookHandler>();
+builder.Services.AddScoped<ProcessIncomingMessageHandler>();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
