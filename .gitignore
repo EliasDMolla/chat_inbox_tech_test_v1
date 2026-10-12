@@ -1,0 +1,17 @@
+.env
+
+bin/
+obj/
+node_modules/
+dist/
+.angular/
+
+.vs/
+.vscode/
+.idea/
+
+*.user
+*.suo
+*.cache
+TestResults/
+coverage/
