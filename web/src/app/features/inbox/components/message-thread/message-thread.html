@@ -1,0 +1,28 @@
+<section #scrollContainer class="thread" aria-live="polite" aria-label="Historial de mensajes">
+  @if (loading) {
+    <div class="thread-state" role="status"><span class="spinner"></span>Cargando mensajes…</div>
+  } @else if (messages.length === 0) {
+    <div class="thread-state thread-state--empty">
+      <span aria-hidden="true">✦</span>
+      <p>No hay mensajes en esta conversación.</p>
+    </div>
+  } @else {
+    <div class="message-stack">
+      @for (message of messages; track message.id) {
+        <article class="message" [class.message--outbound]="message.direction === 'Outbound'">
+          <div class="message__bubble">
+            <p>{{ message.text }}</p>
+            <footer>
+              <time [attr.datetime]="message.sentAt">{{ message.sentAt | date: 'HH:mm' }}</time>
+              @if (message.direction === 'Outbound') {
+                <span class="read-state" [attr.aria-label]="message.isRead ? 'Leído' : 'Enviado'"
+                  >✓{{ message.isRead ? '✓' : '' }}</span
+                >
+              }
+            </footer>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

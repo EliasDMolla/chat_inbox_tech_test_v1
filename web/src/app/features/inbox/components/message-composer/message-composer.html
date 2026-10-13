@@ -1,0 +1,27 @@
+<div class="composer">
+  <label class="sr-only" for="message-text">Mensaje</label
+  ><textarea
+    id="message-text"
+    rows="1"
+    maxlength="4096"
+    placeholder="Escribí un mensaje…"
+    [ngModel]="value"
+    (ngModelChange)="valueChange.emit($event)"
+    (keydown)="onKeydown($event)"
+    [disabled]="disabled || sending"
+  ></textarea
+  ><span class="character-count" [class.character-count--warning]="value.length > 3900"
+    >{{ value.length }}/4096</span
+  ><button
+    type="button"
+    [disabled]="!canSend"
+    (click)="sendRequested.emit()"
+    aria-label="Enviar mensaje"
+  >
+    @if (sending) {
+      <span class="spinner" aria-hidden="true"></span><span>Enviando</span>
+    } @else {
+      <span>Enviar</span><span class="send-icon" aria-hidden="true">↗</span>
+    }
+  </button>
+</div>

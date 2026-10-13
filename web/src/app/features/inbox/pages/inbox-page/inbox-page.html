@@ -1,7 +1,81 @@
-<main class="inbox-placeholder">
-  <section class="inbox-placeholder__card">
-    <p class="inbox-placeholder__eyebrow">EncodeLabs Inbox</p>
-    <h1>Bandeja conversacional</h1>
-    <p>La base de la aplicación está lista.</p>
+<main class="inbox-shell">
+  <aside class="sidebar">
+    <app-conversation-list
+      [conversations]="store.conversations()"
+      [selectedConversationId]="store.selectedConversationId()"
+      [loading]="store.conversationsLoading()"
+      (conversationSelected)="store.selectConversation($event)"
+    />
+  </aside>
+  <section class="workspace">
+    @if (store.error()) {
+      <div class="error-banner" role="alert">
+        <span>{{ store.error() }}</span
+        ><button type="button" (click)="store.dismissError()" aria-label="Cerrar mensaje de error">
+          ×
+        </button>
+      </div>
+    }
+    @if (store.selectedConversation(); as conversation) {
+      <header class="conversation-header">
+        <div>
+          <p>Conversación con</p>
+          <h2>{{ conversation.displayName }}</h2>
+          @if (conversation.username) {
+            <span>&#64;{{ conversation.username }}</span>
+          }
+        </div>
+        <div
+          class="realtime-state"
+          [class.realtime-state--offline]="store.realtimeConnectionState() !== 'connected'"
+        >
+          <span aria-hidden="true"></span>
+          @switch (store.realtimeConnectionState()) {
+            @case ('connected') {
+              Tiempo real activo
+            }
+            @case ('connecting') {
+              Conectando…
+            }
+            @case ('reconnecting') {
+              Reconectando…
+            }
+            @default {
+              Sin conexión en tiempo real
+            }
+          }
+        </div>
+      </header>
+      <app-message-thread
+        [messages]="store.messages()"
+        [conversationId]="store.selectedConversationId()"
+        [loading]="store.messagesLoading()"
+      />
+      <app-message-composer
+        [value]="draft()"
+        (valueChange)="draft.set($event)"
+        [sending]="store.sendingMessage()"
+        [disabled]="store.messagesLoading()"
+        (sendRequested)="sendMessage()"
+      />
+    } @else {
+      <div class="no-selection">
+        <div class="no-selection__graphic" aria-hidden="true"><span>↙</span></div>
+        <p class="eyebrow">Telegram inbox</p>
+        <h2>Tu espacio de conversaciones</h2>
+        <p>Seleccioná una conversación para ver los mensajes.</p>
+        <div
+          class="realtime-state"
+          [class.realtime-state--offline]="store.realtimeConnectionState() !== 'connected'"
+        >
+          <span aria-hidden="true"></span
+          >{{
+            store.realtimeConnectionState() === 'connected'
+              ? 'Tiempo real activo'
+              : 'Conectando con tiempo real…'
+          }}
+        </div>
+      </div>
+    }
   </section>
 </main>

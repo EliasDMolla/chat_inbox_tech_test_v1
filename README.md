@@ -4,9 +4,9 @@ Prueba técnica de una bandeja conversacional para Telegram.
 
 ## Estado actual
 
-FEAT-006 agrega el envío de mensajes de texto desde la API hacia Telegram. Telegram debe confirmar el envío antes de persistir el mensaje outbound; después del commit se notifica a los clientes mediante SignalR. RabbitMQ continúa reservado exclusivamente para mensajes entrantes.
+FEAT-007 incorpora la bandeja Angular de dos paneles sobre las APIs existentes. Permite listar conversaciones, abrir el historial, marcar mensajes como leídos y responder por Telegram. Los cambios confirmados se reflejan mediante SignalR sin recargar el sidebar ni el historial completo.
 
-Los updates repetidos son idempotentes mediante `TelegramUpdateId`; no duplican mensajes, no incrementan nuevamente los no leídos y no emiten eventos SignalR. PostgreSQL es la fuente de verdad y la bandeja Angular todavía no está implementada.
+Los updates repetidos son idempotentes mediante `TelegramUpdateId`; no duplican mensajes, no incrementan nuevamente los no leídos y no emiten eventos SignalR. PostgreSQL sigue siendo la fuente de verdad: tras una reconexión, Angular vuelve a consultar conversaciones y el historial abierto para recuperar cualquier evento perdido.
 
 ## Requisitos
 
@@ -40,6 +40,16 @@ Al iniciar, la API aplica las migraciones de PostgreSQL, declara la topología R
 - Hub SignalR: http://localhost:8080/hubs/conversations
 - RabbitMQ Management: http://localhost:15672
 - ngrok UI/API: http://localhost:4040
+
+## Uso de la bandeja Angular
+
+Abrir http://localhost:4200 después de iniciar Compose. El sidebar carga las conversaciones en el orden entregado por la API y muestra último mensaje, fecha y cantidad de no leídos. No se selecciona una conversación automáticamente: al elegir una se carga su historial y se marcan como leídos los inbound pendientes sin bloquear el resto de la interfaz.
+
+El composer acepta texto de hasta 4096 caracteres. `Enter` envía, `Shift+Enter` agrega una línea y el botón permanece deshabilitado para texto vacío o mientras hay un envío pendiente. La respuesta HTTP muestra el outbound inmediatamente; si también llega `MessageSent`, se deduplica por ID.
+
+La interfaz muestra por separado los estados de carga del sidebar, historial y envío, además de empty states y errores legibles. Un indicador en el panel central informa el estado de SignalR. Si la conexión se recupera, el cliente rehidrata el sidebar y la conversación abierta desde la API porque SignalR no reproduce eventos históricos.
+
+Sin `TELEGRAM_BOT_TOKEN`, el listado, historial y lectura siguen disponibles, pero el envío devuelve `503` y la UI muestra `Telegram no está disponible temporalmente.` Un rechazo explícito de Telegram (`502`) muestra `No se pudo enviar el mensaje a Telegram.`
 
 ## Persistencia e idempotencia
 
@@ -124,7 +134,17 @@ Para probarlo, iniciar el stack, conectar un cliente SignalR al Hub y registrar 
 
 PostgreSQL es la fuente de verdad. SignalR no almacena ni reproduce eventos: luego de una desconexión, el cliente debe recuperar el sidebar con `GET /api/conversations` y el historial seleccionado con `GET /api/conversations/{conversationId}/messages`. Si una notificación falla después del commit, el error se registra sin revertir el estado persistido. No se implementa Outbox en el alcance actual, por lo que una notificación puede perderse y un fallo entre dos eventos puede producir una entrega parcial.
 
-El origen permitido por CORS se configura en `Cors:AllowedOrigins` y por defecto incluye `http://localhost:4200`. En esta etapa no hay autenticación, grupos, scopes multioperador ni cliente SignalR integrado en Angular.
+El origen permitido por CORS se configura en `Cors:AllowedOrigins` y por defecto incluye `http://localhost:4200`. La aplicación Angular mantiene una sola conexión SignalR con reconexión automática. No hay autenticación, grupos ni scopes multioperador.
+
+## Prueba end-to-end de la bandeja
+
+1. Ejecutar `docker compose up --build` y abrir http://localhost:4200.
+2. Enviar un texto al bot o publicar un `IncomingTelegramMessage` válido en RabbitMQ. Verificar que la conversación aparezca o suba al primer lugar, actualice preview/unread y muestre el mensaje sin refresh.
+3. Abrir la conversación. Verificar que se cargue el historial y que el badge unread pase a cero.
+4. Responder desde el composer. Con token real debe aparecer un único outbound y llegar a Telegram; sin token debe verse el error `503` y no debe agregarse un mensaje falso.
+5. Detener temporalmente la API. Verificar el indicador de desconexión, volver a iniciar la API y confirmar que la reconexión rehidrata conversaciones e historial desde PostgreSQL.
+
+El alcance no incluye responsive/mobile, paginación, multimedia, búsqueda, autenticación, edición/eliminación ni estados de entrega.
 
 ## Estructura
 

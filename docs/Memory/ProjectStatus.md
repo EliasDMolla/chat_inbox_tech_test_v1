@@ -78,3 +78,21 @@
 - **Prueba manual:** stack Docker aislado saludable; migración aplicada, API y frontend respondieron `200`, texto whitespace devolvió `400`, conversación inexistente `404` y conversación existente sin token devolvió `503` sin crear mensajes. No se probó un envío Telegram/ngrok real porque no existen credenciales locales; no se agregó un sender fake en runtime.
 - **Limitaciones:** sin idempotency key HTTP, delivery receipts, retries persistentes ni reconciliación del caso Telegram exitoso + DB fallida. SignalR sigue siendo best effort.
 - **Próxima feature recomendada:** FEAT-007, integración de la bandeja Angular con las APIs y eventos SignalR existentes, sin anticiparla en esta implementación.
+
+## FEAT-007 — Bandeja Angular
+
+- **Fecha:** 2026-10-12.
+- **Estado:** completada.
+- **Componentes principales:** página de inbox de dos paneles, listado de conversaciones, historial con bubbles inbound/outbound y composer accesible con límite de 4096 caracteres, `Enter`/`Shift+Enter`, loading, empty states y feedback inline.
+- **Estrategia de estado:** `InboxStore` provisto por la página utiliza Angular Signals para conversaciones, selección, mensajes, cargas, envío, conexión realtime y error. El historial anterior se cancela al cambiar de conversación para evitar races y los estados derivados no se duplican.
+- **Servicios API:** `ConversationsApiService` tipa los cuatro endpoints de conversaciones y centraliza la base URL en `environment.ts`; no existen URLs de API en componentes.
+- **SignalR:** `ConversationsRealtimeService` mantiene una única conexión al Hub, registra los cuatro eventos, expone estado/eventos mediante RxJS y configura reconnect automático más retry para fallos de conexión inicial.
+- **Deduplicación:** tanto la respuesta HTTP de envío como `MessageReceived`/`MessageSent` incorporan mensajes mediante un único helper idempotente por `message.id`, por lo que un outbound confirmado se muestra una sola vez.
+- **Mark-as-read:** se ejecuta al abrir una conversación con unread y ante un inbound en la conversación abierta. No bloquea la UI, evita requests simultáneos por conversación y contempla un inbound concurrente mediante una versión local para repetir la lectura sin perder el unread nuevo.
+- **Reconexión:** al recibir `onreconnected`, se vuelven a cargar el sidebar y el historial actualmente abierto desde PostgreSQL; no se espera replay de SignalR.
+- **Errores:** feedback legible para cargas, lectura, red y envío; `400`, `404`, `502` y `503` tienen mensajes diferenciados. El estado desconectado/reconectando se muestra discretamente y no se usa `alert()`.
+- **Tests:** 12/12 tests Angular, incluidos sidebar, badge, selección/historial, inbound/outbound, composer vacío, doble submit, deduplicación realtime/HTTP, actualización y orden de conversaciones, y rehidratación.
+- **Validaciones:** `npm install` y `npm audit --omit=dev` sin vulnerabilidades; build Angular correcto; 12/12 tests Angular; build .NET sin warnings/errores; 42/42 tests .NET; `docker compose config` válido; imágenes API/frontend construidas correctamente.
+- **Validación manual:** stack Docker aislado saludable; frontend y health devolvieron `200`. Un update de prueba recorrió webhook → RabbitMQ → consumer → PostgreSQL y produjo 1 conversación/1 mensaje; mark-as-read dejó unread en cero. Sin token Telegram, el envío devolvió `503`. El stack y sus volúmenes temporales se retiraron al finalizar. No se verificaron entrega Telegram ni ngrok reales por falta de credenciales.
+- **Limitaciones:** interfaz desktop sin responsive, paginación, multimedia, búsqueda, autenticación ni delivery receipts. SignalR continúa siendo best effort; la rehidratación resuelve eventos perdidos al reconectar, no durante una conexión aparentemente activa.
+- **Próxima feature recomendada:** cierre y revisión integral de la prueba técnica, con prueba Telegram/ngrok real cuando existan credenciales y verificación manual de reconexión bajo Docker.

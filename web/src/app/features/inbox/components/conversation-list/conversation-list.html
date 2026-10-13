@@ -1,0 +1,59 @@
+<header class="sidebar-header">
+  <div class="brand-mark" aria-hidden="true">EL</div>
+  <div>
+    <p>EncodeLabs</p>
+    <h1>Conversaciones</h1>
+  </div>
+</header>
+<div class="sidebar-status">
+  <span>Inbox</span>
+  @if (!loading) {
+    <span>{{ conversations.length }}</span>
+  }
+</div>
+<nav class="conversation-list" aria-label="Conversaciones">
+  @if (loading) {
+    <div class="list-feedback" role="status">
+      <span class="spinner"></span>Cargando conversaciones…
+    </div>
+  } @else if (conversations.length === 0) {
+    <div class="list-feedback list-feedback--empty">
+      <span class="empty-icon" aria-hidden="true">◇</span>
+      <p>No hay conversaciones todavía.</p>
+      <small>Los nuevos mensajes de Telegram aparecerán acá.</small>
+    </div>
+  } @else {
+    @for (conversation of conversations; track conversation.conversationId) {
+      <button
+        type="button"
+        class="conversation"
+        [class.conversation--selected]="conversation.conversationId === selectedConversationId"
+        [attr.aria-current]="conversation.conversationId === selectedConversationId ? 'page' : null"
+        (click)="conversationSelected.emit(conversation.conversationId)"
+      >
+        <span class="avatar" aria-hidden="true">{{ initials(conversation.displayName) }}</span>
+        <span class="conversation__content">
+          <span class="conversation__topline"
+            ><strong>{{ conversation.displayName }}</strong
+            ><time [attr.datetime]="conversation.lastMessageAt">{{
+              conversation.lastMessageAt | date: 'MMM d, HH:mm'
+            }}</time></span
+          >
+          @if (conversation.username) {
+            <span class="username">&#64;{{ conversation.username }}</span>
+          }
+          <span class="conversation__preview"
+            ><span>{{ conversation.lastMessageText }}</span>
+            @if (conversation.unreadCount > 0) {
+              <span
+                class="unread-badge"
+                [attr.aria-label]="conversation.unreadCount + ' mensajes no leídos'"
+                >{{ conversation.unreadCount > 99 ? '99+' : conversation.unreadCount }}</span
+              >
+            }
+          </span>
+        </span>
+      </button>
+    }
+  }
+</nav>
