@@ -96,3 +96,19 @@
 - **Validación manual:** stack Docker aislado saludable; frontend y health devolvieron `200`. Un update de prueba recorrió webhook → RabbitMQ → consumer → PostgreSQL y produjo 1 conversación/1 mensaje; mark-as-read dejó unread en cero. Sin token Telegram, el envío devolvió `503`. El stack y sus volúmenes temporales se retiraron al finalizar. No se verificaron entrega Telegram ni ngrok reales por falta de credenciales.
 - **Limitaciones:** interfaz desktop sin responsive, paginación, multimedia, búsqueda, autenticación ni delivery receipts. SignalR continúa siendo best effort; la rehidratación resuelve eventos perdidos al reconectar, no durante una conexión aparentemente activa.
 - **Próxima feature recomendada:** cierre y revisión integral de la prueba técnica, con prueba Telegram/ngrok real cuando existan credenciales y verificación manual de reconexión bajo Docker.
+
+## FEAT-008 — Cierre y entrega
+
+- **Fecha:** 2026-10-13.
+- **Estado:** auditoría e implementación de cierre completadas; validación manual Telegram usuario ↔ bot pendiente.
+- **Auditoría final:** los 14 requisitos funcionales están implementados. Se revisaron alcance, dependencias de Clean Architecture, controllers, dominio, UTC, transacciones, restricciones e índices, advisory lock `chat:{TelegramChatId}`, RabbitMQ, SignalR, outbound y Angular. No se detectó scope innecesario ni fue necesario modificar código funcional.
+- **Backend:** `dotnet restore`, `dotnet build` (0 warnings/errores), 42/42 tests y `dotnet format --verify-no-changes` correctos.
+- **Frontend:** `npm install`, `npm audit --omit=dev` (0 vulnerabilidades), build Angular y 12/12 tests correctos.
+- **Docker desde cero:** se eliminaron contenedores y volúmenes anteriores del proyecto y `docker compose up --build --detach` reconstruyó el stack. PostgreSQL y RabbitMQ quedaron healthy; migraciones, topología y consumer iniciaron; API `/health` y frontend respondieron 200; ngrok expuso un túnel HTTPS y el webhook fue registrado exitosamente. `docker compose config` también resultó válido.
+- **Telegram/ngrok real:** token, túnel y llamada real a `setWebhook` fueron aceptados. No se ejecutó el recorrido con un mensaje enviado desde una cuenta humana ni se confirmó un outbound recibido por esa cuenta; no se inventa ese resultado y queda como única validación externa pendiente.
+- **Idempotencia/DLQ:** dos updates sintéticos idénticos atravesaron webhook → RabbitMQ → consumer y produjeron 1 contacto, 1 conversación, 1 mensaje, `UnreadCount = 1` y una sola pareja de eventos realtime. La lectura devolvió 204, dejó unread consistente y emitió `MessagesRead`/`ConversationUpdated`. Un JSON inválido terminó en la DLQ y la cola principal quedó vacía.
+- **Reconexión:** al reiniciar la API, un cliente SignalR pasó por reconnect, recuperó la conexión y volvió a consultar conversaciones con HTTP 200. Los tests Angular confirman la rehidratación de sidebar e historial seleccionado.
+- **Documentación:** README reescrito como guía de clonación, configuración, ejecución y prueba; C4 niveles 1 y 2 creados; ADR-002 y ADR-003 precisados sin cambiar decisiones; `Docs/AI-USAGE.md` e índice documental completados.
+- **Seguridad/repositorio:** scan sobre archivos versionados sin tokens, passwords ni connection strings reales; `.env` está ignorado y no versionado; `.env.example` contiene únicamente las siete variables usadas; no hay `bin`, `obj`, `node_modules`, `dist`, dumps ni logs versionados.
+- **Limitaciones finales:** SignalR best effort sin Outbox, trade-off Telegram exitoso + fallo posterior de PostgreSQL, un operador, solo texto, sin auth, búsqueda, paginación, responsive mobile, multimedia ni delivery receipts.
+- **Estado final:** pendiente de validación manual punta a punta con un usuario real de Telegram antes de declarar la entrega completamente validada.

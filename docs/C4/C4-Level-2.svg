@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-labelledby="title desc">
+  <title id="title">C4 nivel 2 - Contenedores de EncodeLabs Inbox</title>
+  <desc id="desc">Angular, ASP.NET Core API, RabbitMQ, PostgreSQL, ngrok y Telegram Platform con flujos incoming y outbound.</desc>
+  <defs>
+    <marker id="inArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#1686c9"/></marker>
+    <marker id="outArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#e06b3c"/></marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#172033" flood-opacity=".12"/></filter>
+  </defs>
+  <rect width="1500" height="900" fill="#f5f7fb"/>
+  <text x="65" y="58" font-family="Inter,Segoe UI,sans-serif" font-size="28" font-weight="700" fill="#172033">EncodeLabs Inbox · C4 nivel 2</text>
+  <text x="65" y="88" font-family="Inter,Segoe UI,sans-serif" font-size="15" fill="#667085">Diagrama de contenedores</text>
+
+  <rect x="305" y="125" width="1130" height="675" rx="26" fill="#ffffff" stroke="#cfd5e2" stroke-dasharray="8 6"/>
+  <text x="330" y="158" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="700" fill="#667085">BANDEJA CONVERSACIONAL</text>
+
+  <g filter="url(#shadow)" font-family="Inter,Segoe UI,sans-serif">
+    <rect x="50" y="355" width="205" height="120" rx="16" fill="#1686c9"/>
+    <text x="152" y="402" text-anchor="middle" font-size="19" font-weight="700" fill="#fff">Telegram Platform</text>
+    <text x="152" y="432" text-anchor="middle" font-size="13" fill="#e7f6ff">Webhook · Bot API</text>
+
+    <rect x="350" y="210" width="230" height="130" rx="16" fill="#3c91c7"/>
+    <text x="465" y="258" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">ngrok</text>
+    <text x="465" y="286" text-anchor="middle" font-size="13" fill="#eaf7ff">Túnel HTTPS público</text>
+    <text x="465" y="308" text-anchor="middle" font-size="12" fill="#d8effc">ngrok container</text>
+
+    <rect x="650" y="345" width="285" height="165" rx="18" fill="#5847d8"/>
+    <text x="792" y="393" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">ASP.NET Core API</text>
+    <text x="792" y="422" text-anchor="middle" font-size="13" fill="#eeecff">Webhook · casos de uso · consumer</text>
+    <text x="792" y="444" text-anchor="middle" font-size="13" fill="#eeecff">Telegram client · SignalR Hub</text>
+    <text x="792" y="478" text-anchor="middle" font-size="12" fill="#dcd8ff">.NET 10</text>
+
+    <rect x="650" y="610" width="285" height="130" rx="16" fill="#d9822b"/>
+    <text x="792" y="658" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">RabbitMQ</text>
+    <text x="792" y="687" text-anchor="middle" font-size="13" fill="#fff5e8">Cola incoming + DLQ</text>
+    <text x="792" y="711" text-anchor="middle" font-size="12" fill="#ffead2">RabbitMQ 4</text>
+
+    <rect x="1055" y="610" width="285" height="130" rx="16" fill="#35715f"/>
+    <text x="1197" y="658" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">PostgreSQL</text>
+    <text x="1197" y="687" text-anchor="middle" font-size="13" fill="#e7fff7">Fuente de verdad</text>
+    <text x="1197" y="711" text-anchor="middle" font-size="12" fill="#d7f5eb">PostgreSQL 17</text>
+
+    <rect x="1055" y="210" width="285" height="130" rx="16" fill="#705cff"/>
+    <text x="1197" y="258" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">Angular Web App</text>
+    <text x="1197" y="287" text-anchor="middle" font-size="13" fill="#f0edff">Bandeja del operador</text>
+    <text x="1197" y="311" text-anchor="middle" font-size="12" fill="#dfdaff">Angular 22 · nginx</text>
+  </g>
+
+  <g fill="none" stroke="#1686c9" stroke-width="3" marker-end="url(#inArrow)">
+    <path d="M255 380 C300 320 310 275 345 275"/>
+    <path d="M585 275 C625 275 625 385 645 400"/>
+    <path d="M750 515 L750 600"/>
+    <path d="M835 600 L835 515"/>
+    <path d="M935 475 C1000 525 1015 600 1050 635"/>
+    <path d="M940 390 C1000 345 1020 300 1050 285"/>
+  </g>
+  <g font-family="Inter,Segoe UI,sans-serif" font-size="12" fill="#126b9f">
+    <text x="315" y="304">1 · HTTPS update</text>
+    <text x="610" y="326">2 · webhook</text>
+    <text x="690" y="560">3 · publish</text>
+    <text x="845" y="560">4 · consume</text>
+    <text x="985" y="555">5 · commit PostgreSQL</text>
+    <text x="970" y="335">6 · SignalR</text>
+  </g>
+
+  <g fill="none" stroke="#e06b3c" stroke-width="3" stroke-dasharray="8 5" marker-end="url(#outArrow)">
+    <path d="M1050 250 C980 185 835 205 810 340"/>
+    <path d="M645 375 C530 385 370 415 260 415"/>
+    <path d="M835 515 C900 575 1010 590 1050 635"/>
+    <path d="M940 400 C985 375 1015 330 1050 305"/>
+  </g>
+  <g font-family="Inter,Segoe UI,sans-serif" font-size="12" fill="#b94f27">
+    <text x="923" y="208">A · HTTP send</text>
+    <text x="470" y="397">B · Telegram Bot API</text>
+    <text x="928" y="570">C · persiste</text>
+    <text x="995" y="365">D · SignalR</text>
+  </g>
+
+  <g font-family="Inter,Segoe UI,sans-serif" font-size="13">
+    <line x1="65" y1="830" x2="110" y2="830" stroke="#1686c9" stroke-width="3" marker-end="url(#inArrow)"/>
+    <text x="125" y="835" fill="#596579">Incoming</text>
+    <line x1="245" y1="830" x2="290" y2="830" stroke="#e06b3c" stroke-width="3" stroke-dasharray="8 5" marker-end="url(#outArrow)"/>
+    <text x="305" y="835" fill="#596579">Outbound (RabbitMQ no participa)</text>
+  </g>
+</svg>
