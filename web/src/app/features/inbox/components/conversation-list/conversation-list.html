@@ -1,12 +1,12 @@
 <header class="sidebar-header">
-  <div class="brand-mark" aria-hidden="true">EL</div>
-  <div>
-    <p>EncodeLabs</p>
-    <h1>Conversaciones</h1>
-  </div>
+  <img class="brand-logo" src="/encodelabs-logo.svg" alt="EncodeLabs" />
+  <p>Telegram inbox</p>
 </header>
 <div class="sidebar-status">
-  <span>Inbox</span>
+  <div>
+    <span>Conversaciones</span>
+    <small>Mensajes recientes</small>
+  </div>
   @if (!loading) {
     <span>{{ conversations.length }}</span>
   }

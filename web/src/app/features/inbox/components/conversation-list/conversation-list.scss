@@ -3,51 +3,59 @@
   min-height: 0;
   height: 100%;
   flex-direction: column;
-  background: #111827;
-  color: #f8fafc;
+  border-right: 1px solid rgb(27 52 57 / 9%);
+  background: rgb(255 255 255 / 72%);
+  color: #202a2c;
 }
 .sidebar-header {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 1.4rem 1.25rem 1.15rem;
-  border-bottom: 1px solid #ffffff12;
+  padding: 1.45rem 1.35rem 1.25rem;
+  border-bottom: 1px solid rgb(27 52 57 / 8%);
 }
-.brand-mark {
-  display: grid;
-  width: 2.55rem;
-  height: 2.55rem;
-  place-items: center;
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, #705cff, #23c9b8);
-  box-shadow: 0 8px 24px #705cff45;
-  font-size: 0.78rem;
-  font-weight: 800;
+.brand-logo {
+  display: block;
+  width: 11.75rem;
+  height: auto;
 }
-.sidebar-header p,
-.sidebar-header h1 {
-  margin: 0;
-}
-.sidebar-header p {
-  color: #8b9aaf;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.11em;
+.sidebar-header > p {
+  margin: 0.65rem 0 0 2.7rem;
+  color: #858b8c;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
-}
-.sidebar-header h1 {
-  margin-top: 0.12rem;
-  font-size: 1.05rem;
 }
 .sidebar-status {
   display: flex;
   justify-content: space-between;
-  padding: 1rem 1.25rem 0.6rem;
-  color: #8b9aaf;
+  align-items: flex-end;
+  padding: 1.15rem 1.35rem 0.7rem;
+  color: #333d3f;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+.sidebar-status div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.sidebar-status small {
+  color: #929899;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.sidebar-status > span {
+  display: grid;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border: 1px solid rgb(31 82 91 / 12%);
+  border-radius: 999px;
+  background: #edf4f4;
+  color: #285f69;
 }
 .conversation-list {
   min-height: 0;
@@ -60,7 +68,7 @@
   gap: 0.8rem;
   padding: 0.85rem 0.7rem;
   border: 1px solid transparent;
-  border-radius: 0.85rem;
+  border-radius: 1rem;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -69,25 +77,25 @@
   transition: 0.15s;
 }
 .conversation:hover {
-  background: #ffffff0a;
+  background: rgb(32 88 96 / 5%);
 }
 .conversation--selected {
-  border-color: #7c6cff4d;
-  background: #6d5ce71c;
+  border-color: rgb(39 103 111 / 13%);
+  background: linear-gradient(110deg, rgb(127 142 201 / 16%), rgb(126 190 193 / 16%));
 }
 .avatar {
   display: grid;
   flex: 0 0 2.65rem;
   height: 2.65rem;
   place-items: center;
-  border-radius: 0.75rem;
-  background: #283348;
-  color: #dce6f7;
+  border-radius: 50%;
+  background: #e6eded;
+  color: #315e66;
   font-size: 0.78rem;
   font-weight: 800;
 }
 .conversation--selected .avatar {
-  background: #705cff;
+  background: linear-gradient(135deg, #6577a9, #4f9094);
   color: white;
 }
 .conversation__content {
@@ -109,18 +117,18 @@
 }
 .conversation__topline time {
   flex: 0 0 auto;
-  color: #7e8da3;
+  color: #8b9293;
   font-size: 0.68rem;
 }
 .username {
   display: block;
   margin-top: 0.12rem;
-  color: #78889e;
+  color: #7d8789;
   font-size: 0.7rem;
 }
 .conversation__preview {
   margin-top: 0.35rem;
-  color: #96a3b7;
+  color: #727b7d;
   font-size: 0.78rem;
 }
 .conversation__preview > span:first-child {
@@ -135,8 +143,8 @@
   padding: 0 0.35rem;
   place-items: center;
   border-radius: 999px;
-  background: #2dd4bf;
-  color: #092c2a;
+  background: #173f48;
+  color: #fff;
   font-size: 0.65rem;
   font-weight: 800;
 }
@@ -147,7 +155,7 @@
   gap: 0.55rem;
   min-height: 8rem;
   padding: 1.5rem;
-  color: #8b9aaf;
+  color: #81898a;
   font-size: 0.82rem;
   text-align: center;
 }
@@ -156,20 +164,20 @@
 }
 .list-feedback p {
   margin: 0.4rem 0 0;
-  color: #cbd5e1;
+  color: #455052;
 }
 .list-feedback small {
   line-height: 1.5;
 }
 .empty-icon {
-  color: #7060e8;
+  color: #4f8c92;
   font-size: 2rem;
 }
 .spinner {
   width: 1rem;
   height: 1rem;
-  border: 2px solid #ffffff26;
-  border-top-color: #8b7cff;
+  border: 2px solid #d6dddd;
+  border-top-color: #34747c;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

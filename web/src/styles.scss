@@ -17,7 +17,7 @@ html,
 body {
   min-width: 64rem;
   min-height: 100%;
-  background: #f4f5f8;
+  background: #f2f3f3;
 }
 
 *,
@@ -32,6 +32,6 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid rgb(112 92 255 / 45%);
+  outline: 3px solid rgb(33 105 117 / 32%);
   outline-offset: 2px;
 }

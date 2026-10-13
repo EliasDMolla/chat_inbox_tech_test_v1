@@ -1,8 +1,9 @@
 :host {
   display: block;
-  border-top: 1px solid #e3e6ec;
-  background: #fff;
-  padding: 0.9rem clamp(1.25rem, 3vw, 2.25rem);
+  border-top: 1px solid rgb(27 52 57 / 9%);
+  background: rgb(255 255 255 / 78%);
+  padding: 1rem clamp(1.25rem, 3vw, 2.25rem);
+  backdrop-filter: blur(1rem);
 }
 .composer {
   display: flex;
@@ -16,18 +17,19 @@ textarea {
   max-height: 8rem;
   flex: 1;
   resize: vertical;
-  border: 1px solid #d8dce5;
-  border-radius: 0.75rem;
+  border: 1px solid #d5dddd;
+  border-radius: 1rem;
   outline: none;
   padding: 0.75rem 1rem;
-  color: #273146;
+  background: #fbfcfb;
+  color: #273335;
   font: inherit;
   font-size: 0.88rem;
   line-height: 1.35;
 }
 textarea:focus {
-  border-color: #705cff;
-  box-shadow: 0 0 0 3px #705cff1c;
+  border-color: #4f8c92;
+  box-shadow: 0 0 0 3px rgb(79 140 146 / 14%);
 }
 textarea:disabled {
   background: #f4f5f7;
@@ -49,8 +51,8 @@ button {
   justify-content: center;
   gap: 0.45rem;
   border: 0;
-  border-radius: 0.75rem;
-  background: #171f31;
+  border-radius: 999px;
+  background: #1d292b;
   color: white;
   font: inherit;
   font-size: 0.82rem;
@@ -58,7 +60,7 @@ button {
   cursor: pointer;
 }
 button:hover:not(:disabled) {
-  background: #705cff;
+  background: #286d75;
 }
 button:disabled {
   cursor: not-allowed;
